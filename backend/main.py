@@ -95,6 +95,30 @@ async def startup_event():
     except Exception as e:
         logger.warning(f"Could not load ML model: {e}")
     
+    # Initialize database and seed data if empty
+    try:
+        from db import init_db, get_session, PartnerSite
+        init_db()
+        logger.info("Database initialized")
+        
+        # Check if database needs seeding
+        session = get_session()
+        site_count = session.query(PartnerSite).count()
+        
+        if site_count == 0:
+            logger.info("Database is empty, seeding data...")
+            import subprocess
+            import sys
+            subprocess.run([sys.executable, "data/seed.py"], check=True)
+            logger.info("Database seeded successfully")
+        else:
+            logger.info(f"Database already contains {site_count} partner sites")
+            
+        session.close()
+    except Exception as e:
+        logger.warning(f"Database initialization/seeding failed: {e}")
+        logger.warning("API will run with limited functionality")
+    
     logger.info("API ready to accept requests")
 
 
