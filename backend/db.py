@@ -128,12 +128,11 @@ def get_engine(database_url: Optional[str] = None):
         database_url = os.getenv('DATABASE_URL')
         
         if not database_url:
-            raise ValueError(
-                "DATABASE_URL not found in environment. "
-                "Please set it in .env file or pass as parameter."
-            )
+            # Use in-memory SQLite for demo/deployment environments
+            database_url = "sqlite:///:memory:"
+            print("Using in-memory SQLite database (data will be lost on restart)")
     
-    engine = create_engine(database_url, echo=True)
+    engine = create_engine(database_url, echo=False)
     return engine
 
 

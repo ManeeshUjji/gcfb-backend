@@ -95,28 +95,38 @@ async def startup_event():
     except Exception as e:
         logger.warning(f"Could not load ML model: {e}")
     
-    # Initialize database and seed data if empty
+    # Initialize database and seed data
     try:
-        from db import init_db, get_session, PartnerSite
-        init_db()
-        logger.info("Database initialized")
+        from db import get_engine, get_session, PartnerSite
+        
+        engine = get_engine()
+        logger.info("Database engine created")
         
         # Check if database needs seeding
-        session = get_session()
-        site_count = session.query(PartnerSite).count()
+        try:
+            session = get_session(engine)
+            site_count = session.query(PartnerSite).count()
+            session.close()
+            needs_seeding = (site_count == 0)
+        except:
+            # If tables don't exist, we need to seed
+            needs_seeding = True
         
-        if site_count == 0:
-            logger.info("Database is empty, seeding data...")
-            import subprocess
+        if needs_seeding:
+            logger.info("Database needs initialization, seeding data...")
+            
+            # Import and run seeding function
             import sys
-            subprocess.run([sys.executable, "data/seed.py"], check=True)
+            sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'data'))
+            from seed import seed_database
+            
+            seed_database()
             logger.info("Database seeded successfully")
         else:
-            logger.info(f"Database already contains {site_count} partner sites")
+            logger.info(f"Database already contains data ({site_count} partner sites)")
             
-        session.close()
     except Exception as e:
-        logger.warning(f"Database initialization/seeding failed: {e}")
+        logger.error(f"Database initialization/seeding failed: {e}", exc_info=True)
         logger.warning("API will run with limited functionality")
     
     logger.info("API ready to accept requests")
