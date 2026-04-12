@@ -4,8 +4,8 @@ sqlalchemy==2.0.25
 psycopg2-binary==2.9.9
 pydantic==2.5.3
 python-dotenv==1.0.0
-scikit-learn==1.4.0
-pandas==2.2.0
-numpy==1.26.3
-ortools==9.8.3296
+numpy==1.26.4
+pandas==2.2.2
+scikit-learn==1.4.2
+ortools==9.10.4067
 requests==2.31.0
