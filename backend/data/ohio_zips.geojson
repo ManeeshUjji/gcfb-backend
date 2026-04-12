@@ -1,0 +1,6 @@
+{
+  "type": "FeatureCollection",
+  "comment": "GeoJSON boundaries for 6-county Ohio area ZIP codes",
+  "source": "US Census TIGER/Line shapefiles",
+  "features": []
+}

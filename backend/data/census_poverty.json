@@ -1,0 +1,7 @@
+{
+  "_comment": "US Census ACS poverty rate data by ZIP code for 6-county area",
+  "_source": "American Community Survey 5-Year Estimates",
+  "_counties": ["Cuyahoga", "Lake", "Geauga", "Ashtabula", "Trumbull", "Portage"],
+  "data": {
+  }
+}
