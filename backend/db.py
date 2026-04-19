@@ -113,9 +113,18 @@ class VolunteerAvailability(Base):
         return f"<VolunteerAvailability(date={self.date}, count={self.volunteer_count})>"
 
 
+_shared_engine = None
+_shared_session_factory = None
+
+
 def get_engine(database_url: Optional[str] = None):
     """
     Create and return SQLAlchemy engine.
+    
+    A single shared engine is cached for the process so that all callers
+    (lazy init, request handlers, health check) talk to the same database.
+    This is critical because in-memory SQLite databases are per-connection
+    and a fresh engine would see no seeded data.
     
     Args:
         database_url: Optional database URL. If not provided, loads from environment.
@@ -123,17 +132,44 @@ def get_engine(database_url: Optional[str] = None):
     Returns:
         SQLAlchemy engine instance
     """
-    if database_url is None:
-        load_dotenv()
-        database_url = os.getenv('DATABASE_URL')
-        
-        if not database_url:
-            # Use in-memory SQLite for demo/deployment environments
-            database_url = "sqlite:///:memory:"
-            print("Using in-memory SQLite database (data will be lost on restart)")
-    
-    engine = create_engine(database_url, echo=False)
-    return engine
+    global _shared_engine, _shared_session_factory
+
+    if database_url is not None:
+        return create_engine(database_url, echo=False)
+
+    if _shared_engine is not None:
+        return _shared_engine
+
+    load_dotenv()
+    database_url = os.getenv('DATABASE_URL')
+
+    if not database_url:
+        database_url = "sqlite:///./gcfb.db"
+        print("Using local SQLite database at ./gcfb.db (DATABASE_URL not set)")
+
+    if database_url.startswith("sqlite"):
+        from sqlalchemy.pool import StaticPool
+        connect_args = {"check_same_thread": False}
+        if ":memory:" in database_url:
+            _shared_engine = create_engine(
+                database_url,
+                echo=False,
+                connect_args=connect_args,
+                poolclass=StaticPool,
+            )
+        else:
+            _shared_engine = create_engine(
+                database_url,
+                echo=False,
+                connect_args=connect_args,
+            )
+    else:
+        _shared_engine = create_engine(database_url, echo=False)
+
+    _shared_session_factory = sessionmaker(
+        autocommit=False, autoflush=False, bind=_shared_engine
+    )
+    return _shared_engine
 
 
 def init_db(engine):
@@ -172,15 +208,17 @@ def get_db():
     """
     Dependency for FastAPI routes to get database session.
     
+    Uses the shared engine/session factory so request handlers see the
+    same data that lazy initialization seeded.
+    
     Yields:
         Database session
     """
-    load_dotenv()
-    database_url = os.getenv('DATABASE_URL')
-    engine = create_engine(database_url)
-    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    
-    db = SessionLocal()
+    global _shared_session_factory
+    if _shared_session_factory is None:
+        get_engine()
+
+    db = _shared_session_factory()
     try:
         yield db
     finally:
