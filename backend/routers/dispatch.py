@@ -15,6 +15,7 @@ from schemas import (
 from models.model_utils import predict_headcount
 from utils.weather import get_weather_service
 from utils.equity import calculate_equity_weight, get_poverty_rate
+from db_lazy_init import ensure_db_initialized
 
 logger = logging.getLogger(__name__)
 
@@ -125,6 +126,7 @@ async def generate_dispatch_plan(
     global _active_dispatch_plan
     
     try:
+        ensure_db_initialized()
         logger.info(f"Generating dispatch plan for {request.truck_count} trucks")
         
         forecast_date = request.date if request.date else date.today()

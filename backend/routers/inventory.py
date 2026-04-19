@@ -9,6 +9,7 @@ from schemas import ExpiringInventoryResponse, InventoryItem, SiteMatchResponse,
 from models.model_utils import predict_headcount
 from utils.weather import get_weather_service
 from utils.equity import get_poverty_rate
+from db_lazy_init import ensure_db_initialized
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +57,7 @@ async def get_expiring_inventory(db: Session = Depends(get_db)):
     Includes color-coded urgency (red < 24hrs, orange < 72hrs).
     """
     try:
+        ensure_db_initialized()
         logger.info("Fetching expiring inventory items")
         
         expiration_threshold = date.today() + timedelta(days=3)

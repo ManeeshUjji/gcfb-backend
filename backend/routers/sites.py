@@ -5,6 +5,7 @@ import logging
 
 from db import get_db, PartnerSite
 from schemas import PartnerSiteBase
+from db_lazy_init import ensure_db_initialized
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,7 @@ async def get_all_sites(db: Session = Depends(get_db)):
     geographic coordinates for map visualization.
     """
     try:
+        ensure_db_initialized()
         logger.info("Fetching all partner sites")
         
         sites = db.query(PartnerSite).all()
