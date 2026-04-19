@@ -52,7 +52,7 @@ def _get_color_code(predicted_headcount: int, capacity: int) -> str:
         return "red"
 
 
-@router.get("/", response_model=ForecastResponse)
+@router.get("", response_model=ForecastResponse)
 async def get_forecast(
     date_param: str = Query("today", alias="date", description="Date for forecast: 'today', 'tomorrow', 'week', or YYYY-MM-DD"),
     db: Session = Depends(get_db)

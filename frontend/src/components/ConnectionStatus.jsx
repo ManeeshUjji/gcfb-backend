@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const HEALTH_URL = API_BASE_URL.replace(/\/api\/?$/, '') + '/health';
+
 const ConnectionStatus = () => {
   const [status, setStatus] = useState('checking');
   const [details, setDetails] = useState('');
@@ -9,7 +12,7 @@ const ConnectionStatus = () => {
     
     const checkConnection = async () => {
       try {
-        const response = await fetch('/health', {
+        const response = await fetch(HEALTH_URL, {
           method: 'GET',
           headers: {
             'Accept': 'application/json',

@@ -113,7 +113,7 @@ def _get_site_demands_with_equity(
     return site_data
 
 
-@router.post("/", response_model=DispatchResponse)
+@router.post("", response_model=DispatchResponse)
 async def generate_dispatch_plan(
     request: DispatchRequest = Body(...),
     db: Session = Depends(get_db)

@@ -15,7 +15,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=List[PartnerSiteBase])
+@router.get("", response_model=List[PartnerSiteBase])
 async def get_all_sites(db: Session = Depends(get_db)):
     """
     Returns full partner site list with coordinates and program types.

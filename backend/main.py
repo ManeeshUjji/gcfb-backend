@@ -24,7 +24,8 @@ app = FastAPI(
     description="Backend API for the Greater Cleveland Food Bank dashboard",
     version="0.1.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    redirect_slashes=False,
 )
 
 allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173").split(",")
