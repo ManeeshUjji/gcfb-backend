@@ -304,6 +304,7 @@ async def assign_to_dispatch(
     global _active_dispatch_plan
     
     try:
+        ensure_db_initialized()
         logger.info(f"Assigning item {request.item_id} to site {request.site_id}")
         
         item = db.query(WarehouseInventory).filter(

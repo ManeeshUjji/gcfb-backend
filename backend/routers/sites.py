@@ -63,6 +63,7 @@ async def get_sites_by_zip(zip_code: str, db: Session = Depends(get_db)):
     Returns list of partner sites in that ZIP code.
     """
     try:
+        ensure_db_initialized()
         logger.info(f"Fetching sites for ZIP code {zip_code}")
         
         sites = db.query(PartnerSite).filter(

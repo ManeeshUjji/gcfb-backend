@@ -104,6 +104,7 @@ async def get_suggested_sites(item_id: int, db: Session = Depends(get_db)):
     Uses fast distance-based scoring (no ML predictions for speed).
     """
     try:
+        ensure_db_initialized()
         logger.info(f"Finding suggested sites for item {item_id}")
         
         item = db.query(WarehouseInventory).filter(
