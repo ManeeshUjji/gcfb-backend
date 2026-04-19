@@ -10,6 +10,7 @@ from schemas import ForecastResponse, ZIPForecast, DetailedForecast, Contributin
 from models.model_utils import predict_headcount, get_top_factors
 from utils.weather import get_weather_service
 from utils.equity import get_poverty_rate
+from db_lazy_init import ensure_db_initialized
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +66,7 @@ async def get_forecast(
     Returns ZIP-level forecasts with color coding.
     """
     try:
+        ensure_db_initialized()
         forecast_date = _get_forecast_date(date_param)
         logger.info(f"Generating forecast for {forecast_date}")
         
