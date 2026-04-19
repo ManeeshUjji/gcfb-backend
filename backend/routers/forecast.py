@@ -153,6 +153,7 @@ async def get_forecast_detail(
     - List of partner sites in that ZIP
     """
     try:
+        ensure_db_initialized()
         forecast_date = _get_forecast_date(date_param)
         logger.info(f"Generating detailed forecast for ZIP {zip_code} on {forecast_date}")
         
