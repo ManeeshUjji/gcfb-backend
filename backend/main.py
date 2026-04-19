@@ -88,48 +88,67 @@ async def global_exception_handler(request: Request, exc: Exception):
 async def startup_event():
     """Load model and initialize resources on startup."""
     logger.info("Starting GCFB Operational Intelligence API...")
+    logger.info("Startup event triggered")
     
+    # Load ML model (non-blocking)
     try:
+        logger.info("Attempting to load ML model...")
         load_model()
         logger.info("ML model loaded successfully")
     except Exception as e:
         logger.warning(f"Could not load ML model: {e}")
+        logger.warning("Continuing without ML model")
     
-    # Initialize database and seed data
+    # Initialize database in a non-blocking way
+    logger.info("Initializing database...")
     try:
-        from db import get_engine, get_session, PartnerSite
+        from db import get_engine, init_db, get_session, PartnerSite
+        from data.seed import (
+            generate_partner_sites, generate_historical_distribution,
+            generate_warehouse_inventory, generate_truck_fleet,
+            generate_volunteer_availability, NUM_SITES_RANGE, NUM_INVENTORY_RANGE,
+            NUM_TRUCKS, EXPIRING_SOON_COUNT, START_DATE, END_DATE
+        )
+        import random
         
+        logger.info("Creating database engine...")
         engine = get_engine()
-        logger.info("Database engine created")
+        logger.info("Database engine created successfully")
         
-        # Check if database needs seeding
-        try:
-            session = get_session(engine)
-            site_count = session.query(PartnerSite).count()
-            session.close()
-            needs_seeding = (site_count == 0)
-        except:
-            # If tables don't exist, we need to seed
-            needs_seeding = True
+        # Initialize tables
+        logger.info("Initializing database tables...")
+        init_db(engine)
+        logger.info("Database tables created successfully")
         
-        if needs_seeding:
-            logger.info("Database needs initialization, seeding data...")
-            
-            # Import and run seeding function
-            import sys
-            sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'data'))
-            from seed import seed_database
-            
-            seed_database()
-            logger.info("Database seeded successfully")
-        else:
-            logger.info(f"Database already contains data ({site_count} partner sites)")
+        # Seed data directly (lightweight version)
+        logger.info("Seeding database with sample data...")
+        session = get_session(engine)
+        
+        num_sites = 45  # Fixed number for faster seeding
+        logger.info(f"Generating {num_sites} partner sites...")
+        sites = generate_partner_sites(session, num_sites)
+        
+        logger.info("Generating historical distribution data...")
+        generate_historical_distribution(session, sites, START_DATE, END_DATE)
+        
+        logger.info("Generating warehouse inventory...")
+        generate_warehouse_inventory(session, 20, EXPIRING_SOON_COUNT)
+        
+        logger.info("Generating truck fleet...")
+        generate_truck_fleet(session, NUM_TRUCKS)
+        
+        logger.info("Generating volunteer availability...")
+        generate_volunteer_availability(session, START_DATE, END_DATE)
+        
+        session.close()
+        logger.info(f"Database seeded successfully with {num_sites} partner sites")
             
     except Exception as e:
-        logger.error(f"Database initialization/seeding failed: {e}", exc_info=True)
+        logger.error(f"Database setup failed: {e}", exc_info=True)
         logger.warning("API will run with limited functionality")
     
-    logger.info("API ready to accept requests")
+    logger.info("=== API READY TO ACCEPT REQUESTS ===")
+    logger.info(f"Documentation available at /docs")
 
 
 @app.get("/")
